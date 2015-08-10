@@ -1,0 +1,72 @@
+#!/usr/bin/php
+<?php
+/*
+#################################################################
+# Title : Drupal 6 users plugin for Munin v1.0
+# Author : Håvard Pedersen
+# Email : fuzzy76 @ fuzzy76 net
+#---------------------------------------------------------------#
+# CHANGELOG
+#
+# v1.0 (initial release 3. march 2011)
+#
+#%# family=manual
+*/
+
+$drupalroot = "/var/www/helsekompetanse.no/";
+
+function doHelp() {
+        echo "To test the script, just run drupal
+You will have to set the path to your Drupal installation in $drupalroot
+Have fun!
+";
+}
+
+function doConfig() {
+
+  echo "graph_title Users in Drupal
+graph_vlabel Users
+graph_category web
+users.label Logged on users
+guests.label Anonymous users
+";
+
+}
+
+function doFetch() {
+  global $drupalroot;
+
+  $_SERVER['HTTP_HOST'] = 'www.helsekompetanse.no';
+  $_SERVER['SCRIPT_NAME'] = '/'.'drupal';
+  chdir($drupalroot);
+  require_once './includes/bootstrap.inc';
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+  $interval = time() - 900;
+  $numberu = sess_count($interval, FALSE);
+//db_result(db_query('SELECT COUNT(DISTINCT s.uid) FROM {sessions} s WHERE s.uid > 0 AND s.timestamp >= %d', $interval));
+  $numberg = sess_count($interval, TRUE);
+//db_result(db_query('SELECT COUNT(s.uid) FROM {sessions} s WHERE s.uid = 0 AND s.timestamp >= %d', $interval)) or die(mysql_error());
+
+  echo "users.value $numberu
+guests.value $numberg
+";
+}
+
+switch ($argv[1]) {
+  case "config":
+    doConfig();
+    break;
+  case "help":
+  case "?":
+    doHelp();
+    break;
+  case "autoconf":
+    echo "no (edit the script to set path)";
+    break;
+  case "fetch":
+  default:
+    doFetch();
+}
+
+?>
